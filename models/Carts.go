@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Cart struct {
 	gorm.Model
-	products []Product
-	total    float32
+	ID       uint `gorm:"primaryKey; not null"`
+	Products []Product
+	Total    float32
 }

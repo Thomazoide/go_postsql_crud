@@ -20,5 +20,9 @@ func main() {
 	database.DB.AutoMigrate(models.Cart{})
 	r := mux.NewRouter()
 	r.HandleFunc("/", routes.HomeHandler)
+	r.HandleFunc("/users", routes.GetUsers).Methods("GET")
+	r.HandleFunc("/users/{id}", routes.GetUser).Methods("GET")
+	r.HandleFunc("/users", routes.PostUser).Methods("POST")
+	r.HandleFunc("/users/{id}", routes.DelUser).Methods("DELETE")
 	http.ListenAndServe(":3000", r)
 }
