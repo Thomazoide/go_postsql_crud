@@ -2,48 +2,73 @@ package routes
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
-	"github.com/Thomazoide/go_postsql_crud/database"
 	"github.com/Thomazoide/go_postsql_crud/models"
+	"github.com/gorilla/mux"
 )
 
-func GetUsers(w http.ResponseWriter, r *http.Request) {
-	var users []models.User
-	database.DB.Find(&users)
-	json.NewEncoder(w).Encode(&users)
-}
-func GetUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	params := mux.Vars(r)
-	database.DB.First(&user, params["id"])
+func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	var user models.Usuario
+	h.DB.First(&user, id)
 	if user.ID == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Usuario no encontrado..."))
+		var err SvResponse
+		err.Mensaje = "Usuario no encontrado..."
+		json.NewEncoder(w).Encode(err)
+	} else {
+		json.NewEncoder(w).Encode(user)
 	}
-	json.NewEncoder(w).Encode(&user)
 }
-func PostUser(w http.ResponseWriter, r *http.Request) {
-	var user *models.User
-	json.NewDecoder(r.Body).Decode(user)
-	newUser := database.DB.Create(user)
-	err := newUser.Error
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+
+func (h *handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	var usuarios []models.Usuario
+	h.DB.Find(&usuarios)
+	if len(usuarios) == 0 {
+		var res SvResponse
+		res.Mensaje = "No hay usuarios registrados..."
+		json.NewEncoder(w).Encode(res)
+	} else {
+		json.NewEncoder(w).Encode(usuarios)
 	}
-	json.NewEncoder(w).Encode(&user)
 }
-func DelUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	params := mux.Vars(r)
-	database.DB.First(&user, params["id"])
+
+func (h *handler) SignUp(w http.ResponseWriter, r *http.Request) {
+	var user models.Usuario
+	json.NewDecoder(r.Body).Decode(&user)
+	h.DB.Create(&user)
+	json.NewEncoder(w).Encode(user)
+}
+
+func (h *handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	var user models.Usuario
+	h.DB.First(&user, id)
 	if user.ID == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Usuario no encontrado..."))
+		var err SvResponse
+		err.Mensaje = "Usuario ya no se encuentra en la base de datos..."
+		json.NewEncoder(w).Encode(err)
+	} else {
+		var res SvResponse
+		res.Mensaje = "Usuario borrado..."
+		h.DB.Delete(&user)
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(res)
 	}
-	database.DB.Unscoped().Delete(&user)
-	w.WriteHeader(http.StatusOK)
+}
+
+func (h *handler) AddProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	var user models.Usuario
+	h.DB.First(&user, id)
+	if user.ID == 0 {
+		var err SvResponse
+		err.Mensaje = "Error en la operacion..."
+		log.Fatal("No encontrado")
+		json.NewEncoder(w).Encode(err)
+	}
 }
