@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Cart struct {
 	gorm.Model
-	Productos []Product `gorm:"default:null"`
+	UserID    uint      `gorm:"unique"`
+	Productos []Product `gorm:"foreignKey:ProductID"`
 	Total     float64
 }

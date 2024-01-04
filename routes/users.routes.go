@@ -12,14 +12,23 @@ import (
 func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
+	bearer := r.Header.Get("Authorization")
+	if bearer == "" {
+		log.Println(bearer)
+	}
 	var user models.Usuario
 	h.DB.First(&user, id)
 	if user.ID == 0 {
 		var err SvResponse
 		err.Mensaje = "Usuario no encontrado..."
+		err.Cuerpo = bearer
 		json.NewEncoder(w).Encode(err)
 	} else {
-		json.NewEncoder(w).Encode(user)
+		var res = &SvResponse{
+			Mensaje: "Usuario encontrado...",
+			Cuerpo:  &user,
+		}
+		json.NewEncoder(w).Encode(res)
 	}
 }
 
@@ -38,8 +47,19 @@ func (h *handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 func (h *handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var user models.Usuario
 	json.NewDecoder(r.Body).Decode(&user)
-	h.DB.Create(&user)
-	json.NewEncoder(w).Encode(user)
+	newPass, err := HashPassword(user.Password)
+	if err != nil {
+		var res SvResponse
+		res.Mensaje = "Error al crear contraseña..."
+		json.NewEncoder(w).Encode(res)
+	} else {
+		var res SvResponse
+		user.Password = newPass
+		res.Mensaje = "Usuario creado con exito..."
+		res.Cuerpo = user
+		h.DB.Create(&user)
+		json.NewEncoder(w).Encode(res)
+	}
 }
 
 func (h *handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -57,18 +77,5 @@ func (h *handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		h.DB.Delete(&user)
 		w.WriteHeader(http.StatusAccepted)
 		json.NewEncoder(w).Encode(res)
-	}
-}
-
-func (h *handler) AddProduct(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-	var user models.Usuario
-	h.DB.First(&user, id)
-	if user.ID == 0 {
-		var err SvResponse
-		err.Mensaje = "Error en la operacion..."
-		log.Fatal("No encontrado")
-		json.NewEncoder(w).Encode(err)
 	}
 }

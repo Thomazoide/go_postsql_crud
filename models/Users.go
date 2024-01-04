@@ -5,7 +5,8 @@ import "gorm.io/gorm"
 type Usuario struct {
 	gorm.Model
 	Nombre   string
-	Email    string
+	Tipo     string
+	Email    string `gorm:"unique"`
 	Password string
-	Carro    Cart `gorm:"default:null"`
+	Carro    Cart `gorm:"foreignKey:UserID"`
 }
