@@ -15,6 +15,7 @@ func ConectarDB() *gorm.DB {
 	var error error
 	DB, error := gorm.Open(postgres.Open(DSN), &gorm.Config{})
 	if error != nil {
+		log.Println("ERROR AL CONECTAR BBDD...")
 		log.Fatal(error)
 		return nil
 	}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Thomazoide/go_postsql_crud/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -31,7 +32,7 @@ type handler struct {
 }
 
 type Claims struct {
-	Email string `json:"email"`
+	User models.Usuario
 	jwt.StandardClaims
 }
 
@@ -49,7 +50,7 @@ func CheckPasswordHash(password string, hsh string) bool {
 	return err == nil
 }
 
-func GenerateToken(email string) (string, error) {
+func GenerateToken(User models.Usuario) (string, error) {
 	errEnv := godotenv.Load()
 	if errEnv != nil {
 		log.Fatal("Error al cargar variables de entorno...")
@@ -58,7 +59,7 @@ func GenerateToken(email string) (string, error) {
 	var jwtKey = []byte(os.Getenv("TKN_SECRET"))
 	expirationTime := time.Now().Add(time.Hour * 24)
 	claim := &Claims{
-		Email: email,
+		User: User,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

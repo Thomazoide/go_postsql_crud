@@ -21,28 +21,32 @@ func (h *handler) LogIn(w http.ResponseWriter, r *http.Request) {
 	if index == -1 {
 		var res = &SvResponse{
 			Mensaje: "Email no registrado...",
+			Cuerpo:  nil,
 		}
 		json.NewEncoder(w).Encode(res)
-	}
-	var passCheck bool = CheckPasswordHash(req.Password, users[index].Password)
-	if !passCheck {
-		var res = &SvResponse{
-			Mensaje: "Contraseña incorrecta...",
+	} else {
+		var passCheck bool = CheckPasswordHash(req.Password, users[index].Password)
+		if !passCheck {
+			var res = &SvResponse{
+				Mensaje: "Contraseña incorrecta...",
+				Cuerpo:  nil,
+			}
+			json.NewEncoder(w).Encode(res)
+		} else {
+			usrToken, err := GenerateToken(users[index])
+			if err != nil {
+				var res = &SvResponse{
+					Mensaje: "Error al crear token...",
+				}
+				json.NewEncoder(w).Encode(res)
+			}
+			var res = &SvResponse{
+				Mensaje: "Inicio de sesion exitoso...",
+				Cuerpo:  usrToken,
+			}
+			json.NewEncoder(w).Encode(res)
 		}
-		json.NewEncoder(w).Encode(res)
 	}
-	usrToken, err := GenerateToken(users[index].Email)
-	if err != nil {
-		var res = &SvResponse{
-			Mensaje: "Error al crear token...",
-		}
-		json.NewEncoder(w).Encode(res)
-	}
-	var res = &SvResponse{
-		Mensaje: "Inicio de sesion exitoso...",
-		Cuerpo:  usrToken,
-	}
-	json.NewEncoder(w).Encode(res)
 }
 
 func (h *handler) VerifyToken(w http.ResponseWriter, r *http.Request) {
